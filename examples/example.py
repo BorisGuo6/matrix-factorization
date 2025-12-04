@@ -31,7 +31,8 @@ matrix_fact.update_users(
     X_train_update, y_train_update, lr=0.001, n_epochs=20, verbose=1
 )
 pred = matrix_fact.predict(X_test_update)
-rmse = mean_squared_error(y_test_update, pred, squared=False)
+mse = mean_squared_error(y_test_update, pred)
+rmse = mse ** 0.5
 print(f"\nTest RMSE: {rmse:.4f}")
 
 # Get recommendations
