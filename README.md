@@ -527,13 +527,18 @@ python -c "import pandas as pd; r=pd.read_parquet('project_template/data/ratings
 
 > 目标：三次课内做出「可复现 + 可对比 + 可交互」的轻量项目作业（推荐 Steam 轻量数据：`steam-200k.csv` + `steam-store-games`）。
 
-#### 第 1 次课（今天）要完成什么（必须完成）
+#### 第 1 次课（今天）：数据闭环 + 基线可跑（必须完成）
 
-- **数据落盘（模板契约）**
-  - 下载并解压到 `project_template/data/`
-  - 运行转换脚本生成：
-    - `project_template/data/ratings.parquet`
-    - `project_template/data/items.parquet`
+- ✅ **TODO（今天必须完成）**
+  - [ ] **数据下载**：Kaggle 数据集下载并解压到 `project_template/data/`
+  - [ ] **数据转换**：生成模板契约文件
+    - `project_template/data/ratings.parquet`（`user_id,item_id,rating`）
+    - `project_template/data/items.parquet`（`item_id,text`）
+  - [ ] **快速 EDA（写进 check-in）**：至少输出 4 个统计（#users/#items/#interactions、稀疏度/长尾、冷启动比例、切分策略）
+  - [ ] **Embedding 缓存**：生成 `project_template/features/items_emb.parquet`
+  - [ ] **训练基线模型**：至少训练一个（baseline 或 item_cf）
+  - [ ] **离线评估可跑**：跑出 `Precision@K/Recall@K/NDCG@K`（截图即可）
+  - [ ] **Demo 可跑**：Streamlit 或 FastAPI 至少跑起来一次（能出推荐结果）
 
 ```bash
 # Kaggle 下载（已配置 kaggle token）
@@ -542,54 +547,51 @@ kaggle datasets download -d nikdavis/steam-store-games -p project_template/data 
 
 # 转换为模板所需 parquet（会自动搜 data/ 下的 steam-200k.csv、steam.csv 等）
 python -m project_template.pipeline.prepare_steam_light --mode play_only --transform log1p --min-interactions 10 --sample-users 500
-```
 
-- **Embedding 缓存（Week5 的核心产物）**
-  - 生成 `project_template/features/items_emb.parquet`
-
-```bash
+# 生成文本 Embedding（缓存到 features/）
 python -m project_template.pipeline.build_item_embeddings
-```
 
-- **跑通 baseline & 评估（确保闭环能跑）**
-  - 训练一个模型并评估 Top-K（输出 Precision/Recall/NDCG）
-
-```bash
+# 训练一个模型 + 导出 demo 索引 + 评估（建议先 baseline 跑通）
 python -m project_template.pipeline.train --model baseline
 python -m project_template.pipeline.export_artifacts
-python -m project_template.pipeline.evaluate --k 10 --positive-threshold 4.0
-```
-
-- **Demo 至少跑起来一次（验收点）**
-  - Streamlit 或 FastAPI 二选一（建议 Streamlit）
-
-```bash
-streamlit run project_template/app/streamlit_app.py
-# 或：python -m project_template.app.api
+python -m project_template.pipeline.evaluate --k 10 --positive-threshold 2.0 --n-test 3
 ```
 
 今天课后应提交（给助教/老师检查）：
 - `checkin_week4.md`（数据来源 + 清洗统计 + 切分策略，见 `project_template/docs/CHECKINS.md`）
 - 一张评估结果截图（`Precision@K/Recall@K/NDCG@K` 输出即可）
 
-#### 第 2 次课：模型对比 + 增强（要看到提升/差异）
+```bash
+streamlit run project_template/app/streamlit_app.py
+# 或：python -m project_template.app.api
+```
 
-- **至少两种模型对比**：`KernelMF` +（`ItemItemCF` 或 `UserUserCF`）
-- **加入增强**：embedding 召回 + 混合排序（`alpha` 可调）或“候选召回→MF rerank”
-- **Ablation**：无增强 vs 有增强（至少一个指标有差异）
+#### 第 2 次课：特征工程 + 模型对比 + 增强（要看到提升/差异）
+
+- ✅ **TODO（第2次课必须完成）**
+  - [ ] **至少两种模型对比**：`KernelMF` +（`ItemItemCF` 或 `UserUserCF`）
+  - [ ] **结构化特征（Week5）**：至少实现 2–3 个简单特征（如流行度/用户活跃度/均值），并写进报告（哪怕先不进模型也行）
+  - [ ] **Embedding/LLM 增强（Week5/6）**（二选一即可）
+    - [ ] **Embedding 增强**：embedding 召回候选 + MF/CF rerank（或 alpha 混合）
+    - [ ] **LLM 抽取（可选）**：从 `items.text` 抽标签/主题/情绪，落盘缓存（用于解释或特征）
+  - [ ] **Ablation**：无增强 vs 有增强（至少一个指标有差异/或给出原因）
 
 建议命令：
 
 ```bash
 python -m project_template.pipeline.train --model kernel_mf --kernel linear
-python -m project_template.pipeline.evaluate --k 10 --positive-threshold 4.0
+python -m project_template.pipeline.evaluate --k 10 --positive-threshold 2.0 --n-test 3
 ```
 
-#### 第 3 次课：打磨 Demo + 复现 + 讲解材料
+#### 第 3 次课：打磨 Demo + 复现（conda）+ 最终展示材料
 
-- **复现脚本齐全**：从空环境到 demo 的命令一条条可跑
-- **Demo 展示**：自由文本输入 +（可选）user_id 个性化 + 解释
-- **最终报告**：设计选择、优势/限制、失败案例与下一步（见 `project_template/docs/RUBRIC.md`）
+- ✅ **TODO（第3次课必须完成）**
+  - [ ] **Conda 可复现**：提供 `environment.yml`（或明确 conda 安装步骤），新环境可跑通训练/评估/demo
+  - [ ] **Demo 展示打磨**：自由文本输入 +（可选）`user_id` 个性化 + 解释（为什么推荐它）
+  - [ ] **最终报告/展示**（对照 Rubric）
+    - [ ] 设计选择（为什么选这些特征/模型/增强）
+    - [ ] 指标对比表（至少 2 个模型 + ablation）
+    - [ ] 失败案例分析（至少 2 个）+ 改进方向
 
 ### 快速参考
 
